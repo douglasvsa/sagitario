@@ -1,0 +1,564 @@
+<!DOCTYPE html> 
+<html lang="pt-BR"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<title>Atualização das Versões SAGITARIO (Supabase)</title> 
+<!-- SDK Oficial do Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style> 
+  :root{ 
+    --azul:#0b3d67; 
+    --azul-claro:#e8f1fa; 
+    --borda:#c3d4e3; 
+    --cinza:#f4f6f8; 
+    --verde:#1e7e34; 
+    --vermelho:#a71d2a; 
+  } 
+  *{box-sizing:border-box;} 
+  body{ 
+    font-family:"Segoe UI",Arial,sans-serif; 
+    background:var(--cinza); 
+    margin:0; 
+    padding:30px 15px; 
+    color:#222; 
+  } 
+  .container{ 
+    max-width:620px; 
+    margin:0 auto; 
+    background:#fff; 
+    border:1px solid var(--borda); 
+    border-radius:10px; 
+    box-shadow:0 2px 10px rgba(0,0,0,.08); 
+    overflow:hidden; 
+  } 
+  h1{ 
+    background:var(--azul); 
+    color:#fff; 
+    font-size:1.2rem; 
+    margin:0; 
+    padding:18px 20px; 
+    text-align:center; 
+    letter-spacing:.5px; 
+  } 
+  .corpo{ 
+    padding:22px 26px 28px 26px; 
+  } 
+  .status-conexao{ 
+    display:flex; 
+    align-items:center; 
+    justify-content:space-between;
+    background:var(--azul-claro); 
+    border:1px solid var(--borda); 
+    border-radius:8px; 
+    padding:12px 14px; 
+    margin-bottom:12px; 
+  } 
+  .status-conexao button{ 
+    padding:8px 14px; 
+    border-radius:6px; 
+    border:1px solid var(--azul); 
+    background:#fff; 
+    color:var(--azul); 
+    font-weight:600; 
+    font-size:.82rem; 
+    cursor:pointer; 
+  } 
+  .status-conexao button:hover{background:var(--azul);color:#fff;} 
+  #statusNuvem{ 
+    font-size:.82rem; 
+    color:#444; 
+    font-weight:600;
+  } 
+  label.lbl{ 
+    display:block; 
+    font-weight:600; 
+    font-size:.85rem; 
+    color:var(--azul); 
+    margin-bottom:4px; 
+    margin-top:16px; 
+  } 
+  select, input[type=text]{ 
+    width:100%; 
+    padding:9px 10px; 
+    border:1px solid var(--borda); 
+    border-radius:6px; 
+    font-size:.95rem; 
+    background:#fff; 
+  } 
+  select:focus, input[type=text]:focus{ 
+    outline:2px solid var(--azul); 
+    outline-offset:1px; 
+  } 
+  input[disabled], select[disabled]{ 
+    background:var(--azul-claro); 
+    color:#555; 
+    cursor:not-allowed; 
+  } 
+  #blocoOrgao{display:none;} 
+  #avisoSemOrgao{ 
+    display:none; 
+    font-size:.8rem; 
+    color:#8a6d00; 
+    margin-top:6px; 
+  } 
+  .linha-campo{ 
+    display:flex; 
+    align-items:flex-end; 
+    gap:10px; 
+    flex-wrap:wrap; 
+  } 
+  .linha-campo > div{flex:1;min-width:150px;} 
+  .linha-campo > .campo-versao{flex:2;min-width:220px;} 
+  .check-wrap{ 
+    display:flex; 
+    align-items:center; 
+    gap:6px; 
+    padding-bottom:9px; 
+    white-space:nowrap; 
+  } 
+  .check-wrap input{width:17px;height:17px;cursor:pointer;} 
+  .check-wrap span{font-size:.85rem;font-weight:600;color:var(--azul);} 
+  .botoes{ 
+    margin-top:24px; 
+    display:flex; 
+    gap:12px; 
+  } 
+  button.acao{ 
+    flex:1; 
+    padding:11px 0; 
+    border:none; 
+    border-radius:6px; 
+    font-size:.95rem; 
+    font-weight:600; 
+    cursor:pointer; 
+  } 
+  #btnGravar{background:var(--verde);color:#fff;} 
+  #btnApagar{background:var(--vermelho);color:#fff;} 
+  button:disabled{opacity:.5;cursor:not-allowed;} 
+  #msg{ 
+    margin-top:14px; 
+    font-size:.83rem; 
+    min-height:18px; 
+    text-align:center; 
+  } 
+  #msg.erro{color:var(--vermelho);font-weight:600;} 
+  #msg.ok{color:var(--verde);font-weight:600;} 
+  #msg.aviso{color:#8a6d00;font-weight:600;} 
+  .rodape{ 
+    text-align:center; 
+    font-size:.72rem; 
+    color:#888; 
+    padding:10px 20px 16px; 
+  } 
+</style> 
+</head> 
+<body> 
+
+<div class="container"> 
+  <h1>Atualização das Versões SAGITARIO</h1> 
+  <div class="corpo"> 
+
+    <div class="status-conexao"> 
+      <span id="statusNuvem">Conectando ao Supabase...</span> 
+      <button id="btnRecarregar" type="button">Sincronizar</button> 
+    </div> 
+
+    <label class="lbl" for="regional">Regional</label> 
+    <select id="regional" disabled> 
+      <option value="">-- selecione --</option> 
+    </select> 
+
+    <div id="blocoOrgao"> 
+      <label class="lbl" for="orgao">Órgão / Estação</label> 
+      <select id="orgao" disabled> 
+        <option value="">-- selecione --</option> 
+      </select> 
+      <div id="avisoSemOrgao">Nenhuma estação encontrada para esta Regional.</div> 
+    </div> 
+
+    <div class="linha-campo"> 
+      <div class="campo-versao"> 
+        <label class="lbl" for="versao">Versão</label> 
+        <input type="text" id="versao" disabled autocomplete="off"> 
+      </div> 
+      <div> 
+        <label class="lbl" for="dataInst">Data da Instalação</label> 
+        <input type="text" id="dataInst" disabled autocomplete="off" placeholder="dd/mm/aaaa" maxlength="10"> 
+      </div> 
+      <div class="check-wrap"> 
+        <input type="checkbox" id="chkAtualizacao"> 
+        <span>Atualização?</span> 
+      </div> 
+    </div> 
+
+    <div class="botoes"> 
+      <button class="acao" id="btnGravar" disabled>Gravar</button> 
+      <button class="acao" id="btnApagar" disabled>Apagar</button> 
+    </div> 
+
+    <div id="msg"></div> 
+  </div> 
+  <div class="rodape">Base de dados centralizada na nuvem — SAGITARIO / SISCEAB</div> 
+</div> 
+
+<script> 
+(function(){ 
+
+  /* ========================================================================= 
+     CONFIGURAÇÃO DO SUPABASE
+     Substitua as constantes abaixo pelas credenciais do seu projeto Supabase:
+     (Project Settings > API)
+     ========================================================================= */ 
+  var SUPABASE_URL = "SUA_URL_DO_SUPABASE_AQUI"; 
+  var SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_PUBLIC_AQUI"; 
+
+  var REGIONAIS = ["CINDACTA I", "CINDACTA II", "CINDACTA III", "CINDACTA IV", "NAVBrasil"]; 
+  var COOLDOWN_MS = 2 * 60 * 1000; 
+  var COOLDOWN_STORAGE_KEY = "sagitario_cooldowns_v1"; 
+
+  var supabaseClient = null; 
+  if (window.supabase && SUPABASE_URL !== "SUA_URL_DO_SUPABASE_AQUI") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  // ---------------- Estado em memória ---------------- 
+  var dadosNuvem = []; 
+  var itemSelecionado = null; 
+
+  // ---------------- Elementos ---------------- 
+  var statusNuvem   = document.getElementById("statusNuvem"); 
+  var btnRecarregar = document.getElementById("btnRecarregar"); 
+  var selRegional   = document.getElementById("regional"); 
+  var blocoOrgao    = document.getElementById("blocoOrgao"); 
+  var selOrgao      = document.getElementById("orgao"); 
+  var avisoSemOrgao = document.getElementById("avisoSemOrgao"); 
+  var inpVersao     = document.getElementById("versao"); 
+  var inpData       = document.getElementById("dataInst"); 
+  var chkAtualiza   = document.getElementById("chkAtualizacao"); 
+  var btnGravar     = document.getElementById("btnGravar"); 
+  var btnApagar     = document.getElementById("btnApagar"); 
+  var msg           = document.getElementById("msg"); 
+
+  REGIONAIS.forEach(function(r){ 
+    var op = document.createElement("option"); 
+    op.value = r; 
+    op.textContent = r; 
+    selRegional.appendChild(op); 
+  }); 
+
+  function mostrarMsg(texto, tipo){ 
+    msg.textContent = texto || ""; 
+    msg.className = tipo || ""; 
+  } 
+
+  /* =========================== LEITURA DO SUPABASE =========================== */ 
+  async function carregarDadosSupabase(){ 
+    if(!supabaseClient){
+      statusNuvem.textContent = "Erro: Configuração do Supabase ausente.";
+      mostrarMsg("Configure a SUPABASE_URL e SUPABASE_ANON_KEY no código.", "erro");
+      return;
+    }
+
+    statusNuvem.textContent = "Sincronizando com a nuvem...";
+    try {
+      var resp = await supabaseClient.from('sisceab').select('*');
+      if (resp.error) throw resp.error;
+
+      dadosNuvem = resp.data || [];
+      statusNuvem.textContent = "Nuvem online (" + dadosNuvem.length + " registro(s))";
+      selRegional.disabled = false;
+      mostrarMsg("Dados sincronizados com sucesso.", "ok");
+      
+      if(selRegional.value){
+        populaOrgaos();
+      }
+    } catch (err) {
+      statusNuvem.textContent = "Erro de conexão";
+      mostrarMsg("Falha ao carregar do Supabase: " + err.message, "erro");
+    }
+  } 
+
+  btnRecarregar.addEventListener("click", carregarDadosSupabase);
+
+  function resetarSelecaoCompleta(){ 
+    blocoOrgao.style.display = "none"; 
+    selOrgao.innerHTML = '<option value="">-- selecione --</option>'; 
+    selOrgao.disabled = true; 
+    limparCamposValor(); 
+    itemSelecionado = null; 
+    pararMonitorCooldown(); 
+  } 
+
+  function limparCamposValor(){ 
+    inpVersao.value = ""; 
+    inpData.value = ""; 
+    inpVersao.dataset.orig = ""; 
+    inpData.dataset.orig = ""; 
+    inpVersao.disabled = true; 
+    inpData.disabled = true; 
+    chkAtualiza.checked = false; 
+    btnGravar.disabled = true; 
+    btnApagar.disabled = true; 
+  } 
+
+  /* =========================== Cooldowns =========================== */ 
+  function lerCooldowns(){ 
+    try{ 
+      var raw = localStorage.getItem(COOLDOWN_STORAGE_KEY); 
+      return raw ? JSON.parse(raw) : {}; 
+    }catch(e){ return {}; } 
+  } 
+  function salvarCooldowns(obj){ 
+    try{ localStorage.setItem(COOLDOWN_STORAGE_KEY, JSON.stringify(obj)); }catch(e){} 
+  } 
+  function chaveCooldown(regional, rotulo){ 
+    return regional + "|" + rotulo; 
+  } 
+  function tempoRestanteMs(regional, rotulo){ 
+    var mapa = lerCooldowns(); 
+    var ultima = mapa[chaveCooldown(regional, rotulo)] || 0; 
+    var restante = COOLDOWN_MS - (Date.now() - ultima); 
+    return restante > 0 ? restante : 0; 
+  } 
+  function registrarGravacao(regional, rotulo){ 
+    var mapa = lerCooldowns(); 
+    mapa[chaveCooldown(regional, rotulo)] = Date.now(); 
+    salvarCooldowns(mapa); 
+  } 
+
+  var cooldownIntervalId = null; 
+  function pararMonitorCooldown(){ 
+    if(cooldownIntervalId){ clearInterval(cooldownIntervalId); cooldownIntervalId = null; } 
+  } 
+  function iniciarMonitorCooldown(regional, rotulo){ 
+    pararMonitorCooldown(); 
+    function checar(){ 
+      var restante = tempoRestanteMs(regional, rotulo); 
+      if(restante > 0){ 
+        btnGravar.disabled = true; 
+        var min = Math.floor(restante / 60000); 
+        var seg = Math.floor((restante % 60000) / 1000); 
+        mostrarMsg("Esta combinação (" + regional + " / " + rotulo + ") foi atualizada há pouco. Aguarde " + 
+          min + "m " + (seg<10?"0":"") + seg + "s para gravar novamente.", "aviso"); 
+      } else { 
+        if(chkAtualiza.checked) btnGravar.disabled = false; 
+        pararMonitorCooldown(); 
+        mostrarMsg("", ""); 
+      } 
+    } 
+    checar(); 
+    if(tempoRestanteMs(regional, rotulo) > 0){ 
+      cooldownIntervalId = setInterval(checar, 1000); 
+    } 
+  } 
+
+  /* =========================== Seleção Regional -> Órgão =========================== */ 
+  function populaOrgaos(){
+    var reg = selRegional.value; 
+    selOrgao.innerHTML = '<option value="">-- selecione --</option>'; 
+    limparCamposValor(); 
+    itemSelecionado = null; 
+    pararMonitorCooldown(); 
+
+    if(!reg){ 
+      blocoOrgao.style.display = "none"; 
+      return; 
+    } 
+
+    blocoOrgao.style.display = "block"; 
+    var estacoes = dadosNuvem.filter(function(d){ return d.regional === reg; }); 
+
+    if(estacoes.length === 0){ 
+      avisoSemOrgao.style.display = "block"; 
+      selOrgao.disabled = true; 
+    } else { 
+      avisoSemOrgao.style.display = "none"; 
+      selOrgao.disabled = false; 
+      estacoes.forEach(function(est){ 
+        var op = document.createElement("option"); 
+        op.value = est.id; 
+        op.textContent = est.orgao; 
+        selOrgao.appendChild(op); 
+      }); 
+    } 
+  }
+
+  selRegional.addEventListener("change", populaOrgaos); 
+
+  selOrgao.addEventListener("change", function(){ 
+    mostrarMsg("", ""); 
+    var idSelected = selOrgao.value; 
+    if(!idSelected){ 
+      limparCamposValor(); 
+      itemSelecionado = null; 
+      pararMonitorCooldown(); 
+      return; 
+    } 
+    
+    itemSelecionado = dadosNuvem.find(function(d){ return String(d.id) === String(idSelected); }); 
+    if(!itemSelecionado) return;
+
+    var versaoTxt = itemSelecionado.versao || ""; 
+    var dataTxt = itemSelecionado.data_inst || ""; 
+
+    inpVersao.value = versaoTxt; 
+    inpData.value = dataTxt; 
+    inpVersao.dataset.orig = versaoTxt; 
+    inpData.dataset.orig = dataTxt; 
+    inpVersao.disabled = true; 
+    inpData.disabled = true; 
+    chkAtualiza.checked = false; 
+    btnApagar.disabled = false; 
+
+    iniciarMonitorCooldown(selRegional.value, itemSelecionado.orgao); 
+  }); 
+
+  /* =========================== Checkbox Atualização? =========================== */ 
+  chkAtualiza.addEventListener("change", function(){ 
+    if(!itemSelecionado){ 
+      chkAtualiza.checked = false; 
+      mostrarMsg("Selecione a Regional e o Órgão antes de marcar Atualização.", "aviso"); 
+      return; 
+    } 
+    var habilitar = chkAtualiza.checked; 
+    inpVersao.disabled = !habilitar; 
+    inpData.disabled = !habilitar; 
+    btnGravar.disabled = !habilitar;
+  }); 
+
+  /* =========================== MÁSCARAS E VALIDAÇÕES =========================== */ 
+  function ligarComportamentoCampo(campo){ 
+    campo.addEventListener("focus", function(){ 
+      if(campo.disabled) return; 
+      campo.dataset.antesDoClique = campo.value; 
+      campo.value = ""; 
+    }); 
+    campo.addEventListener("blur", function(){ 
+      if(campo.disabled) return; 
+      if(campo.value.trim() === ""){ 
+        campo.value = campo.dataset.antesDoClique || campo.dataset.orig || ""; 
+      } 
+    }); 
+  } 
+  ligarComportamentoCampo(inpVersao); 
+  ligarComportamentoCampo(inpData); 
+
+  inpData.addEventListener("input", function(){ 
+    var v = inpData.value.replace(/[^0-9]/g, "").slice(0, 8); 
+    var out = v; 
+    if(v.length > 4){ 
+      out = v.slice(0,2) + "/" + v.slice(2,4) + "/" + v.slice(4); 
+    } else if(v.length > 2){ 
+      out = v.slice(0,2) + "/" + v.slice(2); 
+    } 
+    inpData.value = out; 
+  }); 
+
+  function validarData(valor, exibirErro){ 
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(valor); 
+    if(!m){ 
+      if(exibirErro) mostrarMsg("Data inválida. Use o formato dd/mm/aaaa.", "erro"); 
+      return false; 
+    } 
+    var dd = parseInt(m[1],10), mm = parseInt(m[2],10), aaaa = parseInt(m[3],10); 
+    if(mm < 1 || mm > 12){ 
+      if(exibirErro) mostrarMsg("Mês inválido. Deve ser entre 01 e 12.", "erro"); 
+      return false; 
+    } 
+    var ddMax = (mm === 2) ? 29 : 31; 
+    if(dd < 1 || dd > ddMax){ 
+      if(exibirErro) mostrarMsg("Dia inválido para o mês " + m[2] + ".", "erro"); 
+      return false; 
+    } 
+    if(aaaa < 2015 || aaaa > 2045){ 
+      if(exibirErro) mostrarMsg("Ano inválido.", "erro"); 
+      return false; 
+    } 
+    if(exibirErro) mostrarMsg("", ""); 
+    return true; 
+  } 
+
+  /* =========================== BOTÕES DE AÇÃO =========================== */ 
+  btnApagar.addEventListener("click", function(){ 
+    if(!itemSelecionado) return; 
+    inpVersao.value = itemSelecionado.versao || ""; 
+    inpData.value = itemSelecionado.data_inst || ""; 
+    inpVersao.dataset.orig = inpVersao.value; 
+    inpData.dataset.orig = inpData.value; 
+    inpVersao.disabled = true; 
+    inpData.disabled = true; 
+    chkAtualiza.checked = false; 
+    btnGravar.disabled = true;
+    mostrarMsg("Campos restaurados.", "ok"); 
+  }); 
+
+  btnGravar.addEventListener("click", async function(){ 
+    if(!itemSelecionado) return; 
+
+    if(!chkAtualiza.checked){ 
+      mostrarMsg('Marque a caixa "Atualização?" para poder editar e gravar.', "aviso"); 
+      return; 
+    } 
+
+    var regional = selRegional.value; 
+    var rotulo = itemSelecionado.orgao; 
+
+    if(tempoRestanteMs(regional, rotulo) > 0){ 
+      iniciarMonitorCooldown(regional, rotulo); 
+      return; 
+    } 
+
+    var novaVersao = inpVersao.value.trim(); 
+    var novaDataBR = inpData.value.trim(); 
+
+    if(novaVersao === ""){ 
+      mostrarMsg("Informe a Versão.", "erro"); 
+      return; 
+    } 
+    if(!validarData(novaDataBR, true)){ 
+      return; 
+    } 
+
+    mostrarMsg("Salvando no Supabase...", "aviso");
+
+    try {
+      var resp = await supabaseClient
+        .from('sisceab')
+        .update({ 
+          versao: novaVersao, 
+          data_inst: novaDataBR,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', itemSelecionado.id);
+
+      if(resp.error) throw resp.error;
+
+      itemSelecionado.versao = novaVersao;
+      itemSelecionado.data_inst = novaDataBR;
+
+      registrarGravacao(regional, rotulo); 
+
+      inpVersao.dataset.orig = novaVersao; 
+      inpData.dataset.orig = novaDataBR; 
+      chkAtualiza.checked = false; 
+      inpVersao.disabled = true; 
+      inpData.disabled = true; 
+      btnGravar.disabled = true;
+
+      iniciarMonitorCooldown(regional, rotulo); 
+      mostrarMsg("Gravado com sucesso na nuvem!", "ok"); 
+
+    } catch(err) {
+      mostrarMsg("Erro ao gravar no Supabase: " + err.message, "erro");
+    }
+  }); 
+
+  // Inicializa sincronização ao carregar a página
+  window.addEventListener("DOMContentLoaded", carregarDadosSupabase);
+
+ })(); 
+ </script> 
+
+ </body> 
+ </html>
