@@ -16,7 +16,6 @@
       --cinza: #f4f6f8; 
       --verde: #1e7e34; 
       --vermelho: #a71d2a; 
-      --excel: #107c41;
     } 
 
     * {
@@ -168,8 +167,7 @@
     .botoes { 
       margin-top: 24px; 
       display: flex; 
-      gap: 10px; 
-      flex-wrap: wrap;
+      gap: 12px; 
     } 
 
     button.acao { 
@@ -177,10 +175,9 @@
       padding: 11px 0; 
       border: none; 
       border-radius: 6px; 
-      font-size: .9rem; 
+      font-size: .95rem; 
       font-weight: 600; 
       cursor: pointer; 
-      min-width: 120px;
     } 
 
     #btnGravar {
@@ -192,11 +189,6 @@
       background: var(--vermelho);
       color: #fff;
     } 
-
-    #btnExportar {
-      background: var(--excel);
-      color: #fff;
-    }
 
     button:disabled {
       opacity: .5;
@@ -277,7 +269,6 @@
       <div class="botoes"> 
         <button class="acao" id="btnGravar" disabled>Gravar</button> 
         <button class="acao" id="btnApagar" disabled>Apagar</button> 
-        <button class="acao" id="btnExportar" type="button">Exportar Excel</button>
       </div> 
 
       <div id="msg"></div> 
@@ -320,7 +311,6 @@
       var chkAtualiza   = document.getElementById("chkAtualizacao"); 
       var btnGravar     = document.getElementById("btnGravar"); 
       var btnApagar     = document.getElementById("btnApagar"); 
-      var btnExportar   = document.getElementById("btnExportar");
       var msg           = document.getElementById("msg"); 
 
       REGIONAIS.forEach(function(r){ 
@@ -578,7 +568,6 @@
         if(!chkAtualiza.checked){ 
           mostrarMsg('Marque a caixa "Habilitar Edição" para poder editar e gravar.', "aviso"); 
           return; 
-
         } 
 
         var regional = selRegional.value; 
@@ -633,35 +622,6 @@
           mostrarMsg("Erro ao gravar no Supabase: " + err.message, "erro");
         }
       }); 
-
-      /* =========================== EXPORTAÇÃO PARA EXCEL =========================== */
-      btnExportar.addEventListener("click", function(){
-        if (!dadosNuvem || dadosNuvem.length === 0) {
-          mostrarMsg("Não há dados carregados para exportar.", "aviso");
-          return;
-        }
-
-        var csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-        csvContent += "Regional;Localidade;Versão;Data de Instalação\n";
-
-        dadosNuvem.forEach(function(row){
-          var linha = [
-            '"' + (row.regional || '') + '"',
-            '"' + (row.orgao || '') + '"',
-            '"' + (row.versao || '') + '"',
-            '"' + (row.data_inst || '') + '"'
-          ].join(";");
-          csvContent += linha + "\n";
-        });
-
-        var encodedUri = encodeURI(csvContent);
-        var link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "versoes_sagitario_sisceab.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
 
       // Sincroniza ao carregar a página
       window.addEventListener("DOMContentLoaded", carregarDadosSupabase);
